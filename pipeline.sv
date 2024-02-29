@@ -266,9 +266,15 @@ always_ff @(posedge clock) begin
         end
 
         // Stalling logic
-        if (!stall_due_to_data_hazard && id_ex_enable) begin
-            id_ex_reg <= id_packet;
-        end
+    // Stalling logic
+    if (!stall_due_to_data_hazard && id_ex_enable) begin
+        id_ex_reg <= id_packet;
+    end else begin
+        // Stall condition: set valid bit to 0 and replace instruction with NOP
+        id_ex_reg.valid <= 1'b0;
+        id_ex_reg.inst  <= `NOP;
+    end
+
     end
 end
 
@@ -304,6 +310,8 @@ assign id_ex_valid_dbg = id_ex_reg.valid;
         if (reset) begin
             ex_mem_inst_dbg <= `NOP; // debug output
             ex_mem_reg      <= 0;    // the defaults can all be zero!
+            ex_mem_reg.valid <= `FALSE; // Reset the valid bit
+
         end else if (ex_mem_enable) begin
             ex_mem_inst_dbg <= id_ex_inst_dbg; // debug output, just forwarded from ID
             ex_mem_reg      <= ex_packet;
@@ -314,6 +322,8 @@ assign id_ex_valid_dbg = id_ex_reg.valid;
             // Clear the registers here
             ex_mem_inst_dbg <= `NOP;
             ex_mem_reg      <= 0;
+            ex_mem_reg.valid <= `FALSE; // Also set the valid bit to 0
+
         end
     end
 
