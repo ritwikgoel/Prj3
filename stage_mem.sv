@@ -23,6 +23,8 @@ module stage_mem (
     output MEM_SIZE          proc2Dmem_size,    // Size of data to read or write
     output logic [`XLEN-1:0] proc2Dmem_addr,    // Address sent to Data memory
     output logic [`XLEN-1:0] proc2Dmem_data     // Data sent to Data memory
+    output logic             branch_taken // Added signal to indicate branch taken
+
 );
 
     logic [`XLEN-1:0] read_data;
@@ -46,6 +48,7 @@ module stage_mem (
 
     // Read data from memory and sign extend the proper bits
     always_comb begin
+        branch_taken = ex_mem_reg.take_branch; // ADDED THIS
         read_data = Dmem2proc_data;
         if (ex_mem_reg.rd_unsigned) begin
             // unsigned: zero-extend the data

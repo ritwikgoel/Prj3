@@ -301,7 +301,9 @@ stage_if stage_if_0 (
         .proc2Dmem_command (proc2Dmem_command),
         .proc2Dmem_size    (proc2Dmem_size),
         .proc2Dmem_addr    (proc2Dmem_addr),
-        .proc2Dmem_data    (proc2Dmem_data)
+        .proc2Dmem_data    (proc2Dmem_data),
+        .branch_taken      (branch_taken)
+
     );
 
     //////////////////////////////////////////////////
