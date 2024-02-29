@@ -220,17 +220,20 @@ stage_if stage_if_0 (
         .id_packet (id_packet)
     );
 
-    //////////////////////////////////////////////////
-    //                                              //
-    //            ID/EX Pipeline Register           //
-    //                                              //
-    //////////////////////////////////////////////////
+//////////////////////////////////////////////////
+//                                              //
+//            ID/EX Pipeline Register           //
+//                                              //
+//////////////////////////////////////////////////
 
-    assign id_ex_enable = 1'b1; // always enabled
-    // synopsys sync_set_reset "reset"
-// synopsys sync_set_reset "reset"
-    always_ff @(posedge clock) begin
+// Now for Data Hazard
+logic stall_due_to_data_hazard;
+assign id_ex_enable = 1'b1; // always enabled
+
+
+always_ff @(posedge clock) begin
     if (reset) begin
+        // Reset logic if needed
         id_ex_reg <= '{
             `NOP, // we can't simply assign 0 because NOP is non-zero
             {`XLEN{1'b0}}, // PC
@@ -251,39 +254,29 @@ stage_if stage_if_0 (
             1'b0, // valid
             1'b0  // take_branch
         };
-    end else if (id_ex_enable) begin
-        id_ex_reg <= id_packet;
-    end else if (id_ex_reg.take_branch) begin
-        // Clear the registers here
-        id_ex_reg <= '{
-            `NOP, // we can't simply assign 0 because NOP is non-zero
-            {`XLEN{1'b0}}, // PC
-            {`XLEN{1'b0}}, // NPC
-            {`XLEN{1'b0}}, // rs1 select
-            {`XLEN{1'b0}}, // rs2 select
-            OPA_IS_RS1,
-            OPB_IS_RS2,
-            `ZERO_REG,
-            ALU_ADD,
-            1'b0, // rd_mem
-            1'b0, // wr_mem
-            1'b0, // cond
-            1'b0, // uncond
-            1'b0, // halt
-            1'b0, // illegal
-            1'b0, // csr_op
-            1'b0, // valid
-            1'b0  // take_branch
-        };
+    end else begin
+        // Initially, do not stall
+        stall_due_to_data_hazard <= 1'b0;
+
+        // Check for data hazards
+        if ((id_ex_reg.rs1_value == ex_mem_reg.dest_reg_idx && ex_mem_reg.wr_mem) ||
+            (id_ex_reg.rs2_value == ex_mem_reg.dest_reg_idx && ex_mem_reg.wr_mem)) begin
+            // A data hazard is detected, stall the pipeline
+            stall_due_to_data_hazard <= 1'b1;
+        end
+
+        // Stalling logic
+        if (!stall_due_to_data_hazard && id_ex_enable) begin
+            id_ex_reg <= id_packet;
+        end
     end
 end
 
+// debug outputs
+assign id_ex_NPC_dbg   = id_ex_reg.NPC;
+assign id_ex_inst_dbg  = id_ex_reg.inst;
+assign id_ex_valid_dbg = id_ex_reg.valid;
 
-
-    // debug outputs
-    assign id_ex_NPC_dbg   = id_ex_reg.NPC;
-    assign id_ex_inst_dbg  = id_ex_reg.inst;
-    assign id_ex_valid_dbg = id_ex_reg.valid;
 
     //////////////////////////////////////////////////
     //                                              //
