@@ -184,6 +184,16 @@ stage_if stage_if_0 (
         end else if (if_id_enable) begin
             if_id_reg <= if_packet;
         end
+
+        // Check if the branch was not taken and clear the registers if needed
+    if (ex_mem_reg.take_branch) begin
+        // Clear the registers here
+        if_id_reg.inst  <= `NOP;
+        if_id_reg.valid <= `FALSE;
+        if_id_reg.NPC   <= 0;
+        if_id_reg.PC    <= 0;
+    end
+
     end
 
     // debug outputs
