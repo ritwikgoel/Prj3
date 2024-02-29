@@ -149,20 +149,19 @@ module pipeline (
     //                                              //
     //////////////////////////////////////////////////
 
-    stage_if stage_if_0 (
-        // Inputs
-        .clock (clock),
-        .reset (reset),
-        .if_valid       (next_if_valid),
-        .take_branch    (ex_mem_reg.take_branch),
-        .branch_target  (ex_mem_reg.alu_result),
-        .Imem2proc_data (mem2proc_data),
+stage_if stage_if_0 (
+    // Inputs
+    .clock(clock),
+    .reset(reset),
+    .if_valid(next_if_valid && !ex_mem_reg.take_branch), // Stall IF stage if a branch is taken
+    .take_branch(ex_mem_reg.take_branch),
+    .branch_target(ex_mem_reg.alu_result),
+    .Imem2proc_data(mem2proc_data),
 
-        // Outputs
-        .if_packet      (if_packet),
-        .proc2Imem_addr (proc2Imem_addr)
-    );
-
+    // Outputs
+    .if_packet(if_packet),
+    .proc2Imem_addr(proc2Imem_addr)
+);
     // debug outputs
     assign if_NPC_dbg   = if_packet.NPC;
     assign if_inst_dbg  = if_packet.inst;
