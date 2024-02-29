@@ -275,6 +275,8 @@ typedef struct packed {
     logic       csr_op;        // Is this a CSR operation? (we only used this as a cheap way to get return code)
 
     logic       valid;
+    logic       take_branch;   // Is a branch taken?
+
 } ID_EX_PACKET;
 
 /**

@@ -218,31 +218,57 @@ stage_if stage_if_0 (
 
     assign id_ex_enable = 1'b1; // always enabled
     // synopsys sync_set_reset "reset"
+// synopsys sync_set_reset "reset"
     always_ff @(posedge clock) begin
-        if (reset) begin
-            id_ex_reg <= '{
-                `NOP, // we can't simply assign 0 because NOP is non-zero
-                {`XLEN{1'b0}}, // PC
-                {`XLEN{1'b0}}, // NPC
-                {`XLEN{1'b0}}, // rs1 select
-                {`XLEN{1'b0}}, // rs2 select
-                OPA_IS_RS1,
-                OPB_IS_RS2,
-                `ZERO_REG,
-                ALU_ADD,
-                1'b0, // rd_mem
-                1'b0, // wr_mem
-                1'b0, // cond
-                1'b0, // uncond
-                1'b0, // halt
-                1'b0, // illegal
-                1'b0, // csr_op
-                1'b0  // valid
-            };
-        end else if (id_ex_enable) begin
-            id_ex_reg <= id_packet;
-        end
+    if (reset) begin
+        id_ex_reg <= '{
+            `NOP, // we can't simply assign 0 because NOP is non-zero
+            {`XLEN{1'b0}}, // PC
+            {`XLEN{1'b0}}, // NPC
+            {`XLEN{1'b0}}, // rs1 select
+            {`XLEN{1'b0}}, // rs2 select
+            OPA_IS_RS1,
+            OPB_IS_RS2,
+            `ZERO_REG,
+            ALU_ADD,
+            1'b0, // rd_mem
+            1'b0, // wr_mem
+            1'b0, // cond
+            1'b0, // uncond
+            1'b0, // halt
+            1'b0, // illegal
+            1'b0, // csr_op
+            1'b0, // valid
+            1'b0  // take_branch
+        };
+    end else if (id_ex_enable) begin
+        id_ex_reg <= id_packet;
+    end else if (id_ex_reg.take_branch) begin
+        // Clear the registers here
+        id_ex_reg <= '{
+            `NOP, // we can't simply assign 0 because NOP is non-zero
+            {`XLEN{1'b0}}, // PC
+            {`XLEN{1'b0}}, // NPC
+            {`XLEN{1'b0}}, // rs1 select
+            {`XLEN{1'b0}}, // rs2 select
+            OPA_IS_RS1,
+            OPB_IS_RS2,
+            `ZERO_REG,
+            ALU_ADD,
+            1'b0, // rd_mem
+            1'b0, // wr_mem
+            1'b0, // cond
+            1'b0, // uncond
+            1'b0, // halt
+            1'b0, // illegal
+            1'b0, // csr_op
+            1'b0, // valid
+            1'b0  // take_branch
+        };
     end
+end
+
+
 
     // debug outputs
     assign id_ex_NPC_dbg   = id_ex_reg.NPC;
@@ -279,7 +305,15 @@ stage_if stage_if_0 (
             ex_mem_inst_dbg <= id_ex_inst_dbg; // debug output, just forwarded from ID
             ex_mem_reg      <= ex_packet;
         end
+
+        // Check if the branch was not taken and clear the registers if needed
+        if (ex_mem_reg.take_branch) begin
+            // Clear the registers here
+            ex_mem_inst_dbg <= `NOP;
+            ex_mem_reg      <= 0;
+        end
     end
+
 
     // debug outputs
     assign ex_mem_NPC_dbg   = ex_mem_reg.NPC;

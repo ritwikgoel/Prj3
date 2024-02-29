@@ -22,7 +22,7 @@ module stage_mem (
     output logic [1:0]       proc2Dmem_command, // The memory command
     output MEM_SIZE          proc2Dmem_size,    // Size of data to read or write
     output logic [`XLEN-1:0] proc2Dmem_addr,    // Address sent to Data memory
-    output logic [`XLEN-1:0] proc2Dmem_data     // Data sent to Data memory
+    output logic [`XLEN-1:0] proc2Dmem_data,     // Data sent to Data memory
     output logic             branch_taken // Added signal to indicate branch taken
 
 );
